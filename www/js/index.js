@@ -17,30 +17,53 @@
  * under the License.
  */
 var app = {
-    // Application Constructor
-    initialize: function() {
-        document.addEventListener('deviceready', this.onDeviceReady.bind(this), false);
-    },
+  // Application Constructor
+  initialize: function () {
+    document.addEventListener('deviceready', this.onDeviceReady.bind(this), false);
+  },
 
-    // deviceready Event Handler
-    //
-    // Bind any cordova events here. Common events are:
-    // 'pause', 'resume', etc.
-    onDeviceReady: function() {
-        this.receivedEvent('deviceready');
-    },
+  // deviceready Event Handler
+  //
+  // Bind any cordova events here. Common events are:
+  // 'pause', 'resume', etc.
+  onDeviceReady: function () {
+    this.receivedEvent('deviceready');
+  },
 
-    // Update DOM on a Received Event
-    receivedEvent: function(id) {
-        var parentElement = document.getElementById(id);
-        var listeningElement = parentElement.querySelector('.listening');
-        var receivedElement = parentElement.querySelector('.received');
+  // Update DOM on a Received Event
+  receivedEvent: function (id) {
+    var parentElement = document.getElementById(id);
+    var listeningElement = parentElement.querySelector('.listening');
+    var receivedElement = parentElement.querySelector('.received');
 
-        listeningElement.setAttribute('style', 'display:none;');
-        receivedElement.setAttribute('style', 'display:block;');
+    listeningElement.setAttribute('style', 'display:none;');
+    receivedElement.setAttribute('style', 'display:block;');
 
-        console.log('Received Event: ' + id);
-    }
+    console.log('Received Event: ' + id);
+
+    var watchID = navigator.geolocation.watchPosition(this.onSuccess, this.onError, {
+      maximumAge: 3000,
+      timeout: 5000,
+      enableHighAccuracy: true
+    });
+  },
+
+  onSuccess(position) {
+    var element = document.getElementById('geolocation');
+    element.innerHTML = 'Timestamp:' + new Date().getTime() + '<br />' +
+      'Latitude: ' + position.coords.latitude + '<br />' +
+      'Longitude: ' + position.coords.longitude + '<br />';
+  },
+  onError(error) {
+    var element = document.getElementById('geolocation');
+    element.innerHTML = '<span style="color:red;">Timestamp:' + new Date().getTime() + '<br />' +
+      'code: ' + error.code + '<br />' +
+      'message: ' + error.message + '<br />';
+
+    console.log('code: ' + error.code + '\n' +
+      'message: ' + error.message + '\n');
+  }
+
 };
 
 app.initialize();
