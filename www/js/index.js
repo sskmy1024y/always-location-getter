@@ -16,6 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
+var bgGeo;
+
 var app = {
   // Application Constructor
   initialize: function () {
@@ -28,6 +31,17 @@ var app = {
   // 'pause', 'resume', etc.
   onDeviceReady: function () {
     this.receivedEvent('deviceready');
+    document.addEventListener('resume', () => {
+      console.log("resume");
+      this.resume()
+    })
+    document.getElementById('deviceready').addEventListener('click', () => {
+      localStorage.clear()
+    })
+
+    setInterval(() => {
+      this.resume()
+    }, 3000)
   },
 
   // Update DOM on a Received Event
@@ -41,27 +55,74 @@ var app = {
 
     console.log('Received Event: ' + id);
 
-    var watchID = navigator.geolocation.watchPosition(this.onSuccess, this.onError, {
-      maximumAge: 3000,
-      timeout: 5000,
-      enableHighAccuracy: true
+
+    bgGeo = window.BackgroundGeolocation;
+
+    bgGeo.configure({
+      // 位置情報に関する設定
+      desiredAccuracy: 0,
+      distanceFilter: 10,
+      stationaryRadius: 50,
+      locationUpdateInterval: 1000,
+      fastestLocationUpdateInterval: 5000,
+
+      // アクティビティ認識の初期設定
+      activityType: 'AutomotiveNavigation',
+      activityRecognitionInterval: 5000,
+      stopTimeout: 5,
+
+      // アプリケーションの設定
+      debug: true,
+      stopOnTerminate: false,
+      startOnBoot: true
+    }, function (state) {
+      // 設定完了時のコールバック
+      console.log('BackgroundGeolocation ready: ', state);
+
+      // 設定が終わったら起動します
+      if (!state.enabled) {
+        bgGeo.start();
+      }
     });
+
+    bgGeo.on('location', this.onSuccess, this.onError);
   },
 
-  onSuccess(position) {
-    var element = document.getElementById('geolocation');
-    element.innerHTML = 'Timestamp:' + new Date().getTime() + '<br />' +
-      'Latitude: ' + position.coords.latitude + '<br />' +
-      'Longitude: ' + position.coords.longitude + '<br />';
-  },
-  onError(error) {
-    var element = document.getElementById('geolocation');
-    element.innerHTML = '<span style="color:red;">Timestamp:' + new Date().getTime() + '<br />' +
-      'code: ' + error.code + '<br />' +
-      'message: ' + error.message + '<br />';
+  onSuccess: (location, taskId) => {
+    // 位置情報から必要な情報を抽出
+    const coords = location.coords;
+    const lat = coords.latitude;
+    const lng = coords.longitude;
 
-    console.log('code: ' + error.code + '\n' +
+    console.log(`location get success: [${lat} , ${lng}]`);
+
+    let geoData = localStorage.getItem('locations') ? JSON.parse(localStorage.getItem('locations')) : [];
+
+    geoData.push(location);
+
+    localStorage.setItem('locations', JSON.stringify(geoData))
+
+    bgGeo.finish(taskId)
+  },
+
+  onError: (error) => {
+    console.warn('code: ' + error.code + '\n' +
       'message: ' + error.message + '\n');
+  },
+
+  resume: () => {
+    const textarea = document.getElementById('textarea');
+    const geoDatas = JSON.parse(localStorage.getItem('locations'));
+    if (!geoDatas) {
+      textarea.innerHTML = `no logs`
+      return
+    }
+
+    const geoData = geoDatas[geoDatas.length - 1]
+    const timestamp = geoData.timestamp;
+    const latitude = geoData.coords.latitude;
+    const longitude = geoData.coords.longitude;
+    textarea.innerHTML = `timestamp: ${timestamp} <br /> latitude: ${latitude} <br /> longitude: ${longitude} <br />`
   }
 
 };

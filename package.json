@@ -13,13 +13,19 @@
   "author": "Apache Cordova Team",
   "license": "Apache-2.0",
   "dependencies": {
+    "cordova-background-geolocation-lt": "^3.0.6",
     "cordova-ios": "^5.0.1",
+    "cordova-plugin-background-fetch": "^5.4.1",
+    "cordova-plugin-cocoalumberjack": "0.0.4",
     "cordova-plugin-geolocation": "^4.0.1"
   },
   "cordova": {
     "plugins": {
       "cordova-plugin-geolocation": {},
-      "cordova-plugin-whitelist": {}
+      "cordova-plugin-whitelist": {},
+      "cordova-background-geolocation-lt": {
+        "BACKGROUND_MODE_LOCATION": "<string>location</string>"
+      }
     },
     "platforms": [
       "ios"
