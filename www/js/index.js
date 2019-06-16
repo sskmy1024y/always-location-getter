@@ -21,71 +21,86 @@ var bgGeo;
 
 var app = {
   // Application Constructor
-  initialize: function () {
-    document.addEventListener('deviceready', this.onDeviceReady.bind(this), false);
+  initialize: function() {
+    document.addEventListener(
+      "deviceready",
+      this.onDeviceReady.bind(this),
+      false
+    );
   },
 
   // deviceready Event Handler
   //
   // Bind any cordova events here. Common events are:
   // 'pause', 'resume', etc.
-  onDeviceReady: function () {
-    this.receivedEvent('deviceready');
-    document.addEventListener('resume', () => {
+  onDeviceReady: function() {
+    this.receivedEvent("deviceready");
+    document.addEventListener("resume", () => {
       console.log("resume");
-      this.resume()
-    })
-    document.getElementById('deviceready').addEventListener('click', () => {
-      localStorage.clear()
-    })
+      this.resume();
+    });
+    document.getElementById("deviceready").addEventListener("click", () => {
+      localStorage.clear();
+    });
 
     setInterval(() => {
-      this.resume()
-    }, 3000)
+      this.resume();
+    }, 3000);
   },
 
   // Update DOM on a Received Event
-  receivedEvent: function (id) {
+  receivedEvent: function(id) {
     var parentElement = document.getElementById(id);
-    var listeningElement = parentElement.querySelector('.listening');
-    var receivedElement = parentElement.querySelector('.received');
+    var listeningElement = parentElement.querySelector(".listening");
+    var receivedElement = parentElement.querySelector(".received");
 
-    listeningElement.setAttribute('style', 'display:none;');
-    receivedElement.setAttribute('style', 'display:block;');
+    listeningElement.setAttribute("style", "display:none;");
+    receivedElement.setAttribute("style", "display:block;");
 
-    console.log('Received Event: ' + id);
-
+    console.log("Received Event: " + id);
 
     bgGeo = window.BackgroundGeolocation;
 
-    bgGeo.configure({
-      // 位置情報に関する設定
-      desiredAccuracy: 0,
-      distanceFilter: 10,
-      stationaryRadius: 50,
-      locationUpdateInterval: 1000,
-      fastestLocationUpdateInterval: 5000,
+    bgGeo.configure(
+      {
+        // 位置情報に関する設定
+        desiredAccuracy: 0,
+        distanceFilter: 10,
+        stationaryRadius: 50,
+        locationUpdateInterval: 1000,
+        fastestLocationUpdateInterval: 5000,
 
-      // アクティビティ認識の初期設定
-      activityType: 'AutomotiveNavigation',
-      activityRecognitionInterval: 5000,
-      stopTimeout: 5,
+        // アクティビティ認識の初期設定
+        activityType: "AutomotiveNavigation",
+        activityRecognitionInterval: 5000,
+        stopTimeout: 5,
 
-      // アプリケーションの設定
-      debug: true,
-      stopOnTerminate: false,
-      startOnBoot: true
-    }, function (state) {
-      // 設定完了時のコールバック
-      console.log('BackgroundGeolocation ready: ', state);
+        // HTTP送信を行う
+        url: "http://my-location-server.example.com/",
+        params: {
+          userId: 1
+        },
+        method: "POST",
+        autoSync: true,
 
-      // 設定が終わったら起動します
-      if (!state.enabled) {
-        bgGeo.start();
+        // アプリケーションの設定
+        debug: true,
+        stopOnTerminate: false,
+        startOnBoot: true,
+        maxRecordsToPersist: 50
+      },
+      function(state) {
+        // 設定完了時のコールバック
+        console.log("BackgroundGeolocation ready: ", state);
+
+        // 設定が終わったら起動します
+        if (!state.enabled) {
+          bgGeo.start();
+        }
       }
-    });
+    );
 
-    bgGeo.on('location', this.onSuccess, this.onError);
+    bgGeo.on("location", this.onSuccess, this.onError);
   },
 
   onSuccess: (location, taskId) => {
@@ -96,35 +111,37 @@ var app = {
 
     console.log(`location get success: [${lat} , ${lng}]`);
 
-    let geoData = localStorage.getItem('locations') ? JSON.parse(localStorage.getItem('locations')) : [];
+    let geoData = localStorage.getItem("locations")
+      ? JSON.parse(localStorage.getItem("locations"))
+      : [];
 
     geoData.push(location);
 
-    localStorage.setItem('locations', JSON.stringify(geoData))
+    localStorage.setItem("locations", JSON.stringify(geoData));
 
-    bgGeo.finish(taskId)
+    bgGeo.finish(taskId);
   },
 
-  onError: (error) => {
-    console.warn('code: ' + error.code + '\n' +
-      'message: ' + error.message + '\n');
+  onError: error => {
+    console.warn(
+      "code: " + error.code + "\n" + "message: " + error.message + "\n"
+    );
   },
 
   resume: () => {
-    const textarea = document.getElementById('textarea');
-    const geoDatas = JSON.parse(localStorage.getItem('locations'));
+    const textarea = document.getElementById("textarea");
+    const geoDatas = JSON.parse(localStorage.getItem("locations"));
     if (!geoDatas) {
-      textarea.innerHTML = `no logs`
-      return
+      textarea.innerHTML = `no logs`;
+      return;
     }
 
-    const geoData = geoDatas[geoDatas.length - 1]
+    const geoData = geoDatas[geoDatas.length - 1];
     const timestamp = geoData.timestamp;
     const latitude = geoData.coords.latitude;
     const longitude = geoData.coords.longitude;
-    textarea.innerHTML = `timestamp: ${timestamp} <br /> latitude: ${latitude} <br /> longitude: ${longitude} <br />`
+    textarea.innerHTML = `timestamp: ${timestamp} <br /> latitude: ${latitude} <br /> longitude: ${longitude} <br />`;
   }
-
 };
 
 app.initialize();
