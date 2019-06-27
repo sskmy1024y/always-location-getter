@@ -76,7 +76,7 @@ var app = {
         stopTimeout: 5,
 
         // HTTP送信を行う
-        url: "http://my-location-server.example.com/",
+        url: "https://kiku-nyan.t-lab.cs.teu.ac.jp/api/locations",
         params: {
           userId: 1
         },
