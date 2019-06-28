@@ -81,6 +81,7 @@ var app = {
             userID = json.user_id
             localStorage.setItem("userID", userID)
 
+            document.getElementById("line-button").setAttribute("style", "display:none");
             parentElement.querySelector(".notlogin").setAttribute("style", "display:none");
             parentElement.querySelector(".running").setAttribute("style", "display:block");
 
@@ -103,7 +104,10 @@ var app = {
       alert("userID is not found")
       return
     }
+
     bgGeo = window.BackgroundGeolocation;
+
+    bgGeo.on("location", app.onSuccess, app.onError);
 
     bgGeo.configure({
         // 位置情報に関する設定
@@ -142,13 +146,6 @@ var app = {
         }
       }
     );
-
-    // レジューム時の挙動を設定
-    document.addEventListener("resume", () => {
-      this.resume();
-    });
-
-    bgGeo.on("location", this.onSuccess, this.onError);
   },
 
   onSuccess: (location, taskId) => {
@@ -159,12 +156,11 @@ var app = {
 
     console.log(`location get success: [${lat} , ${lng}]`);
 
-    let geoData = localStorage.getItem("locations") ?
-      JSON.parse(localStorage.getItem("locations")) : [];
+    // let geoData = localStorage.getItem("locations") ?
+    //   JSON.parse(localStorage.getItem("locations")) : [];
 
-    geoData.push(location);
-
-    localStorage.setItem("locations", JSON.stringify(geoData));
+    // geoData.push(location);
+    // localStorage.setItem("locations", JSON.stringify(geoData));
 
     bgGeo.finish(taskId);
   },
@@ -174,21 +170,41 @@ var app = {
       "code: " + error.code + "\n" + "message: " + error.message + "\n"
     );
   },
-
-  resume: () => {
-    const textarea = document.getElementById("textarea");
-    const geoDatas = JSON.parse(localStorage.getItem("locations"));
-    if (!geoDatas) {
-      textarea.innerHTML = `no logs`;
-      return;
-    }
-
-    const geoData = geoDatas[geoDatas.length - 1];
-    const timestamp = geoData.timestamp;
-    const latitude = geoData.coords.latitude;
-    const longitude = geoData.coords.longitude;
-    textarea.innerHTML = `timestamp: ${timestamp} <br /> latitude: ${latitude} <br /> longitude: ${longitude} <br />`;
-  }
 };
+
+
+var old = console.log;
+console.log = function () {
+  old.apply(this, arguments)
+
+  const target = document.getElementById('console');
+  const log = document.createElement('p');
+  log.textContent = JSON.stringify(arguments);
+  target.insertBefore(log, target.firstChild)
+}
+
+var olderror = console.error;
+console.error = function () {
+  olderror.apply(this, arguments)
+
+  const target = document.getElementById('console');
+  const log = document.createElement('p');
+  log.textContent = JSON.stringify(arguments);
+  log.style("color", "red");
+  target.insertBefore(log, target.firstChild)
+}
+
+
+var oldwarn = console.warn;
+console.warn = function () {
+  oldwarn.apply(this, arguments)
+
+  const target = document.getElementById('console');
+  const log = document.createElement('p');
+  log.textContent = JSON.stringify(arguments);
+  log.style("color", "yellow");
+  target.insertBefore(log, target.firstChild)
+}
+
 
 app.initialize();

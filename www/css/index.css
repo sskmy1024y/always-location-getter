@@ -126,6 +126,12 @@ h1 {
     background-size: cover;
 }
 
+#console {
+    width: auto;
+    height: 200px;
+    overflow-y: scroll;
+}
+
 @keyframes fade {
     from {
         opacity: 1.0;
