@@ -60,6 +60,7 @@ var app = {
     console.log("Received Event: " + id);
 
     bgGeo = window.BackgroundGeolocation;
+    window.lineLogin.initialize({ channel_id: "1593360387" });
 
     bgGeo.configure(
       {
