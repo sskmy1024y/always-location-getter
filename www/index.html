@@ -29,6 +29,7 @@
             * Disables use of inline scripts in order to mitigate risk of XSS vulnerabilities. To change this:
                 * Enable inline JS: add 'unsafe-inline' to default-src
         -->
+    <meta charset="utf-8" />
     <meta
         content="default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *; img-src 'self' data: content:; connect-src 'self' https://mb.api.cloud.nifty.com"">
     <meta name=" format-detection" content="telephone=no">
@@ -44,11 +45,13 @@
         <div id="deviceready" class="blink">
             <p class="event listening">Connecting to Device</p>
             <p class="event received">Device is Ready</p>
+            <p class="event notlogin">Require LINE Login</p>
+            <p class="event running">Getting Location</p>
         </div>
+        <button id="line-button"><span id="buttonImage"></span></button>
         <div id="textarea"></div>
     </div>
     <script type="text/javascript" src="cordova.js"></script>
-    <script src="components/ncmb.min.js"></script>
     <script type="text/javascript" src="js/index.js"></script>
 </body>
 

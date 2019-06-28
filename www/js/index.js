@@ -17,11 +17,14 @@
  * under the License.
  */
 
+var baseURL = "https://kiku-nyan.t-lab.cs.teu.ac.jp"
+
 var bgGeo;
+var userID;
 
 var app = {
   // Application Constructor
-  initialize: function() {
+  initialize: function () {
     document.addEventListener(
       "deviceready",
       this.onDeviceReady.bind(this),
@@ -33,37 +36,76 @@ var app = {
   //
   // Bind any cordova events here. Common events are:
   // 'pause', 'resume', etc.
-  onDeviceReady: function() {
+  onDeviceReady: function () {
+    // 準備ができたらイベント実行
     this.receivedEvent("deviceready");
-    document.addEventListener("resume", () => {
-      console.log("resume");
-      this.resume();
-    });
-    document.getElementById("deviceready").addEventListener("click", () => {
-      localStorage.clear();
-    });
 
-    setInterval(() => {
-      this.resume();
-    }, 3000);
+    // setInterval(() => {
+    //   this.resume();
+    // }, 3000);
   },
 
   // Update DOM on a Received Event
-  receivedEvent: function(id) {
+  receivedEvent: function (id) {
+    /* ========== デバイスの準備完了 ==================== */
     var parentElement = document.getElementById(id);
     var listeningElement = parentElement.querySelector(".listening");
     var receivedElement = parentElement.querySelector(".received");
-
     listeningElement.setAttribute("style", "display:none;");
     receivedElement.setAttribute("style", "display:block;");
 
-    console.log("Received Event: " + id);
+    // LINE情報を格納
+    window.lineLogin.initialize({
+      channel_id: "1593360387"
+    });
+    // きくにゃんIDを取得
+    userID = localStorage.getItem("userID");
 
+    if (!userID) { // 初回起動なら登録
+      receivedElement.setAttribute("style", "display:none;");
+      parentElement.querySelector(".notlogin").setAttribute("style", "display:block");
+
+      const loginBtn = document.getElementById("line-button");
+      loginBtn.setAttribute("style", "display:block");
+      loginBtn.addEventListener("click", () => {
+        window.lineLogin.login({}, (result) => {
+          // line-idからkikunyan_idに変換
+          fetch(`${baseURL}/api/users?line_user_id=${result.userID}`).then((response) => {
+            return response.json();
+          }).then((json) => {
+            if (!json.user_id) {
+              alert("kikunyan was not registered.")
+              return false
+            }
+
+            userID = json.user_id
+            localStorage.setItem("userID", userID)
+
+            parentElement.querySelector(".notlogin").setAttribute("style", "display:none");
+            parentElement.querySelector(".running").setAttribute("style", "display:block");
+
+            this.prepareGet()
+          });
+        }, (error) => {
+          alert(error);
+        })
+      })
+    } else {
+      parentElement.querySelector(".received").setAttribute("style", "display:none");
+      parentElement.querySelector(".running").setAttribute("style", "display:block");
+
+      this.prepareGet()
+    }
+  },
+
+  prepareGet: () => {
+    if (userID === undefined) {
+      alert("userID is not found")
+      return
+    }
     bgGeo = window.BackgroundGeolocation;
-    window.lineLogin.initialize({ channel_id: "1593360387" });
 
-    bgGeo.configure(
-      {
+    bgGeo.configure({
         // 位置情報に関する設定
         desiredAccuracy: 0,
         distanceFilter: 10,
@@ -77,9 +119,9 @@ var app = {
         stopTimeout: 5,
 
         // HTTP送信を行う
-        url: "https://kiku-nyan.t-lab.cs.teu.ac.jp/api/locations",
+        url: `${baseURL}/api/locations`,
         params: {
-          userId: 1
+          userId: userID
         },
         method: "POST",
         autoSync: true,
@@ -90,7 +132,7 @@ var app = {
         startOnBoot: true,
         maxRecordsToPersist: 50
       },
-      function(state) {
+      function (state) {
         // 設定完了時のコールバック
         console.log("BackgroundGeolocation ready: ", state);
 
@@ -100,6 +142,11 @@ var app = {
         }
       }
     );
+
+    // レジューム時の挙動を設定
+    document.addEventListener("resume", () => {
+      this.resume();
+    });
 
     bgGeo.on("location", this.onSuccess, this.onError);
   },
@@ -112,9 +159,8 @@ var app = {
 
     console.log(`location get success: [${lat} , ${lng}]`);
 
-    let geoData = localStorage.getItem("locations")
-      ? JSON.parse(localStorage.getItem("locations"))
-      : [];
+    let geoData = localStorage.getItem("locations") ?
+      JSON.parse(localStorage.getItem("locations")) : [];
 
     geoData.push(location);
 
